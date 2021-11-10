@@ -1,7 +1,8 @@
-import random
+from random import randint
 from bs4 import BeautifulSoup
 import requests
 import json
+import csv
 from time import sleep
 
 # 				Соберем информацию о самых популярных играх с 2019 по 2022
@@ -17,7 +18,7 @@ headers = {
 	'Accept': 'text/html,application/xhtml+xml,application/xml;q=-1.9,image/avif,image/webp,*/*;q=0.8'
 	, 'User-Agent': 'Mozilla/4.0 (X11; Ubuntu; Linux x86_64; rv:94.0) Gecko/20100101 Firefox/94.0'
 }
-# s = requests.Session()  # Сессия сохранит состояние между запросами куки, заголовки и тд
+s = requests.Session()  # Сессия сохранит состояние между запросами куки, заголовки и тд
 
 # games_dict = {}
 # for page in range(1, 26):
@@ -49,11 +50,78 @@ with open('data_game/games_url.json', 'r') as file:
 	games_url = json.load(file)
 # print(len(games_url))
 
+# 5)Создаем csv файл с заголовками для записи до цикла
+HEADERS = (
+		'title',
+		'score',
+		'platform',
+		'genre',
+		'release_date',
+		'developer',
+		'publisher',
+		'img'
+	)
 
+with open('data_game/games_info.csv', 'w', encoding='utf-8') as file:
+	writer = csv.writer(file)
+	writer.writerow(HEADERS)
+
+# 6)Собираем информацию со страниц с играми и записываем в csv файл
 count = 0
-for game in games_url.items():
-	print(game)
-	count += 1
+for title, link in games_url.items():
+	# print(title, link)
 
-	if count == 3:
-		break
+	try:
+		response = s.get(link, headers=headers)
+		if response.status_code == 200:
+			html = response.text
+		else:
+			print(f'Ошибка {response.status_code} на запросе {title} {link}')
+	except Exception:
+		print(f'Ошибка в запросе к {link}')
+		pass
+
+	soup = BeautifulSoup(html, 'lxml')
+	# print(soup.prettify())
+
+	# Собираем информацию с карточки
+	try:
+		score = soup.find('div', class_='score').text
+	except AttributeError:
+		score = 0
+
+	img = soup.find('div', class_='image-game-logo').img['src']
+	article_title = soup.find('div', class_='game-details').h1.a.get_text(strip=True)
+
+	game_specs = soup.find('div', class_='game-specs').find_all('div', class_='game-spec')
+	lst = []
+	for i in game_specs:
+		label = i.find('span', class_='label').get_text(strip=True)
+		value = i.find('span', class_='value').get_text(strip=True)
+		lst.append(label)
+		lst.append(value)
+	# print(lst)
+
+	# Добавляем информацию в csv файл
+	with open('data_game/games_info.csv', 'a', encoding='utf-8') as file:
+		writer = csv.writer(file)
+		writer.writerow(
+			(
+				article_title,
+				score,
+				lst[1],
+				lst[3],
+				lst[5],
+				lst[7],
+				lst[9],
+				img
+			)
+		)
+	print(f'[INFO] Добавлено в файл {article_title},{score},{lst[1]},{lst[3]},{lst[5]},{lst[7]},{lst[9]},{img}')
+	# sleep(randint(2, 4))
+
+	# Блок отладки
+	count += 1
+	# if count == 3:
+	# 	break
+print(f'[INFO] Всего добавлено {count} строки')
