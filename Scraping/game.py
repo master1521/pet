@@ -1,127 +1,138 @@
-from random import randint
 from bs4 import BeautifulSoup
 import requests
-import json
 import csv
-from time import sleep
 
-# 				Соберем информацию о самых популярных играх с 2019 по 2022
+class Client:
+	def __init__(self):
+		""" Конструктор создает атрибуты объекта"""
+		self.session = requests.Session()  # Сессия сохранит состояние между запросами куки, заголовки и тд
+		self.session.headers = {
+			'Accept': 'text/html,application/xhtml+xml,application/xml;q=-1.9,image/avif,image/webp,*/*;q=0.8'
+			, 'User-Agent': 'Mozilla/4.0 (X11; Ubuntu; Linux x86_64; rv:94.0) Gecko/20100101 Firefox/94.0'
+		}
+		self.games_url = []
 
-# 1)Собрать список ссылок на странице игр
-base_url = 'https://stopgame.ru'
+	def link_generation(self, pages: int):
+		""" Принимает количество страниц для генерации url
+		и возвращает список со ссылками """
 
-# Переключение на следующую страницу происходит путем передачи номера страницы в параметр p, p=2, таким образом
-# можно перебрать страницы каталога в цикле
+		list_url = []
+		for page in range(1, pages):
+			url = f"https://stopgame.ru/topgames?p={page}"
+			list_url.append(url)
 
-# Делаем запрос
-headers = {
-	'Accept': 'text/html,application/xhtml+xml,application/xml;q=-1.9,image/avif,image/webp,*/*;q=0.8'
-	, 'User-Agent': 'Mozilla/4.0 (X11; Ubuntu; Linux x86_64; rv:94.0) Gecko/20100101 Firefox/94.0'
-}
-s = requests.Session()  # Сессия сохранит состояние между запросами куки, заголовки и тд
+		return list_url
 
-# games_dict = {}
-# for page in range(1, 26):
-# 	url = f"https://stopgame.ru/topgames?p={page}"
-# 	req = s.get(url, headers=headers)
-# 	src = req.text
-#
-# 	# Создаем объект bs4
-# 	soup = BeautifulSoup(src, 'lxml')
-#
-# # 	# Находим нужные блоки на странице
-# 	list_items = soup.find_all('div', class_="caption caption-bold")
-#
-# 	# Добавляем информацию в словарь
-# 	for item in list_items:
-# 		uri = item.a['href']
-# 		title = item.a.get_text("|", strip=True)
-# 		games_dict[title] = f'{base_url}{uri}'
-# 		print(f'Добавлено в словарь: {title} {base_url}{uri}')
-# 	sleep(random.randrange(2, 4))
-# print(len(games_dict))
-#
-# 3)Сохраним в файл список игр
-# with open('data_game/games_url.json', 'w') as file:
-# 	json.dump(games_dict, file)
+	def load_page(self, url):
+		""" Принимает url и возвращает html страницу в виде текста """
+		req = self.session.get(url)
+		return req.text  # req.status_code
 
-# 4)Откроем фал для просмотра
-with open('data_game/games_url.json', 'r') as file:
-	games_url = json.load(file)
-# print(len(games_url))
+	def pars_page(self, src):
+		""" Принимает html страницу в виде текста и создает объект bs4 """
+		soup = BeautifulSoup(src, 'lxml')
+		return soup
 
-# 5)Создаем csv файл с заголовками для записи до цикла
-HEADERS = (
-		'title',
-		'score',
-		'platform',
-		'genre',
-		'release_date',
-		'developer',
-		'publisher',
-		'img'
-	)
+	def find_links(self, soup):
+		""" Принимает объект bs4 ищет ссылки на страницы с играми, и возвращает список ссылок"""
+		base_url = 'https://stopgame.ru'
+		games_links_page = []
 
-with open('data_game/games_info.csv', 'w', encoding='utf-8') as file:
-	writer = csv.writer(file)
-	writer.writerow(HEADERS)
+		for item in soup.find_all('div', class_="caption caption-bold"):
+			uri = item.a['href']
+			games_links_page.append(f'{base_url}{uri}')
+		return games_links_page
 
-# 6)Собираем информацию со страниц с играми и записываем в csv файл
-count = 0
-for title, link in games_url.items():
-	# print(title, link)
+	def add_info_in_file(self, file_, games_url_list):
+		""" Принимает название файла и список со ссылками на карточки игр,
+		возвращает информацию о добавленных строках в файл"""
 
-	try:
-		response = s.get(link, headers=headers)
-		if response.status_code == 200:
-			html = response.text
-		else:
-			print(f'Ошибка {response.status_code} на запросе {title} {link}')
-	except Exception:
-		print(f'Ошибка в запросе к {link}')
-		pass
+		count = 0
+		for link in games_url_list:
+			# Получаем страницу
+			src = self.load_page(link)
 
-	soup = BeautifulSoup(html, 'lxml')
-	# print(soup.prettify())
+			# Создаем объект bs4
+			soup = self.pars_page(src)
 
-	# Собираем информацию с карточки
-	try:
-		score = soup.find('div', class_='score').text
-	except AttributeError:
-		score = 0
+			try:
+				score = soup.find('div', class_='score').text
+			except AttributeError:
+				score = 0
 
-	img = soup.find('div', class_='image-game-logo').img['src']
-	article_title = soup.find('div', class_='game-details').h1.a.get_text(strip=True)
+			img = soup.find('div', class_='image-game-logo').img['src']
+			article_title = soup.find('div', class_='game-details').h1.a.get_text(strip=True)
+			game_specs = soup.find('div', class_='game-specs').find_all('div', class_='game-spec')
 
-	game_specs = soup.find('div', class_='game-specs').find_all('div', class_='game-spec')
-	lst = []
-	for i in game_specs:
-		label = i.find('span', class_='label').get_text(strip=True)
-		value = i.find('span', class_='value').get_text(strip=True)
-		lst.append(label)
-		lst.append(value)
-	# print(lst)
+			lst = []
+			for i in game_specs:
+				label = i.find('span', class_='label').get_text(strip=True)
+				value = i.find('span', class_='value').get_text(strip=True)
+				lst.append(label)
+				lst.append(value)
 
-	# Добавляем информацию в csv файл
-	with open('data_game/games_info.csv', 'a', encoding='utf-8') as file:
-		writer = csv.writer(file)
-		writer.writerow(
-			(
-				article_title,
-				score,
-				lst[1],
-				lst[3],
-				lst[5],
-				lst[7],
-				lst[9],
-				img
-			)
+			# Добавляем информацию в csv файл
+			with open(f'{file_}.csv', 'a', encoding='utf-8') as file:
+				writer = csv.writer(file)
+				writer.writerow(
+					(
+						article_title,
+						score,
+						lst[1],
+						lst[3],
+						lst[5],
+						lst[7],
+						lst[9],
+						img
+					)
+				)
+			print(f'[INFO] Добавлено в файл {article_title},{score},{lst[1]},{lst[3]},{lst[5]},{lst[7]},{lst[9]},{img}')
+			count += 1
+		return print(f'[INFO] Всего добавлено {count} строк')
+
+	""" Точка входа """
+	def run(self, file_, page_: int):
+		"""Запускает сценарий
+		Принимает:
+		 1)название файла file_ в который будет добавлена информация,
+		 2)кол страниц для сбора page_
+
+		Возвращает csv файл с данными фильмов """
+
+
+		""" Создаем csv файл с заголовками для записи, это надо сделать
+		до цикла в котором будет добавляться информация иначе файл будет без заголовков """
+
+		HEADERS = (
+			'title',
+			'score',
+			'platform',
+			'genre',
+			'release_date',
+			'developer',
+			'publisher',
+			'img'
 		)
-	print(f'[INFO] Добавлено в файл {article_title},{score},{lst[1]},{lst[3]},{lst[5]},{lst[7]},{lst[9]},{img}')
-	# sleep(randint(2, 4))
 
-	# Блок отладки
-	count += 1
-	# if count == 3:
-	# 	break
-print(f'[INFO] Всего добавлено {count} строки')
+		with open(f'{file_}.csv', 'w', encoding='utf-8') as file:
+			writer = csv.writer(file)
+			writer.writerow(HEADERS)
+
+		""" Собираем ссылки на карточки игр """
+		for link in self.link_generation(page_):
+			# Получаем страницу в виде текста
+			src = self.load_page(link)
+
+			# Создаем объект bs4
+			soup = self.pars_page(src)
+
+			# Собираем ссылки на игры со страницы
+			games_url_page = self.find_links(soup)
+			self.games_url.extend(games_url_page)
+
+		# Собираем информацию с карточки и добавляем в файл
+		self.add_info_in_file(file_, self.games_url)
+
+if __name__ == '__main__':
+	person = Client()
+	person.run('data', 3)
