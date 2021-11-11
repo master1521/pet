@@ -26,6 +26,7 @@ class Client:
 	def load_page(self, url):
 		""" Принимает url и возвращает html страницу в виде текста """
 		req = self.session.get(url)
+		req.status_code()
 		return req.text  # req.status_code
 
 	def pars_page(self, src):
@@ -136,3 +137,4 @@ class Client:
 if __name__ == '__main__':
 	person = Client()
 	person.run('data', 3)
+
