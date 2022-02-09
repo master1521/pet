@@ -1,4 +1,9 @@
 /venv/
 /.idea/
 /Scraping/data/
+Scraping/data.csv
 /authentication/env/
+.gitignore
+
+
+
