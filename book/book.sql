@@ -1,6 +1,7 @@
 -- CREATE SCHEMA dim
 
 
+
 --Список из покупатели которые купиль больше всего книг?
 --Посчитайсе минимальный, средний, максимальный платеж и сумму всех платежей для каждого покупателя
 
@@ -118,4 +119,85 @@ LEFT JOIN book b ON b.id_book = p.id_book
 SELECT * FROM t
 WHERE ROW_NUMBER <= 2 
 
+
+_________________________________________
+
+CREATE SCHEMA main
+
+CREATE TABLE main.country (
+	id_country serial PRIMARY KEY
+	,country varchar(50) NOT NULL)
+
+CREATE TABLE main.city (
+	id_city serial PRIMARY KEY
+	,id_country integer NOT NULL REFERENCES book.main.country (id_country)
+	,city varchar(50) NOT NULL)
+
+CREATE TABLE main.address (
+	id_address serial PRIMARY KEY
+	,id_city integer NOT NULL REFERENCES book.main.city (id_city)
+	,address varchar(200) NOT NULL)
+
+CREATE TABLE main.gender (
+	id_gender serial PRIMARY KEY
+	,gender varchar(10))
+
+CREATE TABLE main.shop (
+	id_shop serial PRIMARY KEY
+	,id_address int NOT NULL REFERENCES book.main.address (id_address)
+	,name varchar(150) NOT NULL
+	,phone varchar(20)
+)
+
+CREATE TABLE main.customer (
+	id_customer serial PRIMARY KEY
+	,first_name varchar(50) NOT NULL
+	,last_name varchar(50) NOT NULL
+	,id_address integer NOT NULL REFERENCES book.main.address (id_address)
+	,phone varchar(20)
+	,email varchar(100)
+	,id_gender int NOT NULL REFERENCES book.main.gender (id_gender))
+	
+CREATE TABLE main.autor (
+	id_autor serial PRIMARY KEY
+	,first_name varchar(100) NOT NULL
+	,last_name varchar(100) NOT NULL
+	,id_gender INTEGER NOT NULL REFERENCES book.main.gender (id_gender))
+
+CREATE TABLE main.publisher (
+	id_publisher serial PRIMARY KEY
+	,publisher varchar(100) NOT NULL)
+
+CREATE TABLE main.book (
+	id_book serial PRIMARY KEY,
+	title varchar(100) NOT NULL,
+	price decimal(10,2) NOT NULL,
+	pages int NOT NULL,
+	release_year timestamp NOT NULL,
+	id_publisher int NOT NULL REFERENCES book.main.publisher (id_publisher))
+
+CREATE TABLE main.gener (
+	id_gener serial PRIMARY KEY
+	,gener varchar(50) NOT NULL)
+	
+CREATE TABLE main.book_gener (
+	id_book integer NOT NULL
+	,id_gener integer NOT NULL
+	,PRIMARY KEY (id_book, id_gener)
+	,FOREIGN KEY (id_book) REFERENCES book.main.book (id_book)
+	,FOREIGN KEY (id_gener) REFERENCES book.main.gener (id_gener))
+	
+CREATE TABLE main.book_autor (
+	id_book integer NOT NULL
+	,id_autor integer NOT NULL
+	,PRIMARY KEY (id_book, id_autor)
+	,FOREIGN KEY (id_book) REFERENCES book.main.book (id_book)
+	,FOREIGN KEY (id_autor) REFERENCES book.main.autor (id_autor))
+
+CREATE TABLE main.date (
+	id_date serial PRIMARY KEY
+	,dt timestamp NOT NULL)
+
+
+    
 
