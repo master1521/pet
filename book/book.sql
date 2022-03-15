@@ -120,7 +120,7 @@ SELECT * FROM t
 WHERE ROW_NUMBER <= 2 
 
 
-_________________________________________
+-------------------------------------------------
 
 CREATE SCHEMA main
 
@@ -173,7 +173,7 @@ CREATE TABLE main.book (
 	title varchar(100) NOT NULL,
 	price decimal(10,2) NOT NULL,
 	pages int NOT NULL,
-	release_year timestamp NOT NULL,
+	release_year date NOT NULL,
 	id_publisher int NOT NULL REFERENCES book.main.publisher (id_publisher))
 
 CREATE TABLE main.gener (
@@ -198,6 +198,27 @@ CREATE TABLE main.date (
 	id_date serial PRIMARY KEY
 	,dt timestamp NOT NULL)
 
+DROP TABLE main.gender
 
-    
+DELETE FROM main.gender
+
+DELETE FROM main.date
+
+SELECT
+	id_date
+	,dt AS date
+	,to_char(dt, 'YYYY-MM-DD')::date AS ansi_date
+    ,EXTRACT(YEAR FROM dt) as YEAR --Получить год
+    ,EXTRACT(MONTH FROM dt) as MONTH  --Получить месяц
+    ,EXTRACT(DAY FROM dt) as DAY --Получить месяц
+    ,EXTRACT(ISODOW FROM dt) as week_day --Получить месяц
+FROM main.date
+
+
+
+
+
+
+
+
 
