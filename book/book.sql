@@ -98,9 +98,6 @@ CREATE TABLE main.sales (
 	,PRIMARY KEY (id_shop, id_product, id_customer, id_date))
 
 
-	
----------------------------------------------------------------------
-
 --Из основной даты можно достать нужные срезы 
 SELECT
 	id_date
@@ -113,7 +110,7 @@ SELECT
 FROM main.date
 
 
---Итоговая таблица фактов продаж по продажам
+--Итоговая таблица фактов по продажам
 SELECT
 	s.id_shop 
 	,s.id_product 
@@ -128,48 +125,8 @@ LEFT JOIN main.book b ON b.id_book = s.id_product
 LEFT JOIN main."date" d ON s.id_date = d.id_date
 
 
-
--- Материализованное представление по книгам
-CREATE MATERIALIZED VIEW m_book AS
-WITH t AS (
-	SELECT
-		bg.id_book 
-		,g.gener
-	FROM main.book_gener bg 
-	LEFT JOIN gener g ON g.id_gener = bg.id_gener
-), autor_b AS (
-	SELECT 
-		ba.id_book
-		,a.first_name
-		,a.last_name 
-		,a.gender
-	FROM book_autor ba
-	LEFT JOIN (SELECT * FROM main.autor a LEFT JOIN gender g ON g.id_gender = a.id_gender) a ON a.id_autor = ba.id_autor
-)
-SELECT
-	b.id_book
-	,b.title 
-	,b.price 
-	,b.pages 
-	,b.release_year
-	,b.id_publisher
-	,t.gener
-	,p.publisher
-	,ab.first_name 
-	,ab.last_name
-	,ab.gender 
-FROM main.book b
-LEFT JOIN t ON t.id_book = b.id_book
-LEFT JOIN main.publisher p ON p.id_publisher = b.id_publisher
-LEFT JOIN autor_b ab ON ab.id_book = b.id_book
-
-
-SELECT * FROM m_book
-
----------------------------
-ВОПРОСЫ
+--ВОПРОСЫ
  
-
 --Список из покупателей которые купиль больше всего книг?
 --Посчитайсе минимальный, средний, максимальный платеж и сумму всех платежей для каждого покупателя
 SELECT
@@ -263,6 +220,179 @@ WITH t AS (
 SELECT * FROM t
 WHERE "row_number" <= 2
 
+
+-- Схема звезда
+
+--Создаем схему
+CREATE SCHEMA star
+
+--Создаем таблицу дат
+CREATE TABLE star.date (
+	id_date int PRIMARY KEY
+	,dt timestamp NOT NULL)
+
+	
+--Создаем таблицу магазинов
+CREATE TABLE star.shop (
+	id_shop int PRIMARY KEY 
+	,name varchar(150) NOT NULL
+	,address varchar(200) NOT NULL
+	,city varchar(50) NOT NULL
+	,country varchar(50) NOT NULL
+	,phone varchar(20))
+
+	
+--Создаем таблицу книг
+CREATE TABLE star.book (
+	id serial PRIMARY KEY
+	,id_book int NOT NULL
+	,title varchar(100) NOT NULL
+	,price decimal(10,2) NOT NULL
+	,pages int NOT NULL
+	,release_year date NOT NULL
+	,publisher varchar(100)
+	,gener varchar(50)
+	,first_name_author varchar(100)
+	,last_name_author varchar(100)
+	,gender varchar(10))
+
+
+--Создаем таблицу покупателей
+CREATE TABLE star.customer (
+	id_customer int PRIMARY KEY
+	,first_name varchar(50) NOT NULL
+	,last_name varchar(50) NOT NULL
+	,address varchar(200) NOT NULL
+	,city varchar(50) NOT NULL
+	,country varchar(50) NOT NULL
+	,phone varchar(20)
+	,email varchar(100)
+	,gender varchar(10) NOT NULL)
+
+
+--Создаем таблицу продаж
+CREATE TABLE star.sales (
+	id_shop int NOT NULL REFERENCES star.shop (id_shop)
+	,id_product int NOT NULL REFERENCES star.book (id)
+	,id_customer int NOT NULL REFERENCES star.customer (id_customer)
+	,id_date int NOT NULL REFERENCES star.date (id_date)
+	,quantity int NOT NULL CHECK (quantity > 1)
+	,PRIMARY KEY (id_shop, id_product, id_customer, id_date))
+	
+
+
+-- Создаем материализованное представление по книгам
+CREATE MATERIALIZED VIEW m_book AS
+WITH t AS (
+	SELECT
+		bg.id_book 
+		,g.gener
+	FROM main.book_gener bg 
+	LEFT JOIN gener g ON g.id_gener = bg.id_gener
+), autor_b AS (
+	SELECT 
+		ba.id_book
+		,a.first_name
+		,a.last_name 
+		,a.gender
+	FROM book_autor ba
+	LEFT JOIN (SELECT * FROM main.autor a LEFT JOIN gender g ON g.id_gender = a.id_gender) a ON a.id_autor = ba.id_autor
+)
+SELECT
+	b.id_book
+	,b.title 
+	,b.price 
+	,b.pages 
+	,b.release_year
+	,b.id_publisher
+	,t.gener
+	,p.publisher
+	,ab.first_name 
+	,ab.last_name
+	,ab.gender 
+FROM main.book b
+LEFT JOIN t ON t.id_book = b.id_book
+LEFT JOIN main.publisher p ON p.id_publisher = b.id_publisher
+LEFT JOIN autor_b ab ON ab.id_book = b.id_book
+
+
+-- Создаем материализованное представление по адресам
+CREATE MATERIALIZED VIEW m_address AS
+SELECT
+	a.id_address
+	,c.id_city 
+	,c2.id_country
+	,a.address 
+	,c.city 
+	,c2.country
+FROM address a
+LEFT JOIN city c ON c.id_city = a.id_city 
+LEFT JOIN country c2 ON c2.id_country = c.id_country
+
+
+-- Создаем материализованное представление по магазинам
+CREATE MATERIALIZED VIEW m_shop AS
+SELECT
+	s.id_shop 
+	,s.id_address
+	,s."name"
+	,a.address
+	,a.city 
+	,a.country 
+	,s.phone
+FROM shop s
+LEFT JOIN m_address a ON s.id_address = a.id_address
+
+
+-- Создаем материализованное представление по покупателям
+CREATE MATERIALIZED VIEW m_customer AS 
+SELECT 
+	c.id_customer
+	,c.first_name 
+	,c.last_name
+	,ma.address 
+	,ma.city 
+	,ma.country
+	,c.phone 
+	,c.email
+	,g.gender
+FROM main.customer c
+LEFT JOIN main.m_address ma ON ma.id_address = c.id_address
+LEFT JOIN main.gender g ON g.id_gender = c.id_gender
+
+
+-- Добавляем данные по датам
+INSERT INTO star."date" (id_date, dt)
+SELECT * FROM main."date" d	
+
+
+-- Добавляем данные по книгам 
+INSERT INTO star.book (id_book, title, price, pages, release_year, publisher, gener, first_name_author, last_name_author, gender)
+SELECT
+	id_book
+	,title 
+	,price 
+	,pages 
+	,release_year 
+	,publisher 
+	,gener 
+	,first_name 
+	,last_name 
+	,gender 
+FROM main.m_book
+
+-- Добавляем данные по магазинам
+INSERT INTO star.shop (id_shop, "name", address, city, country, phone)
+SELECT * FROM m_shop 
+
+
+-- Добавляем данные по покупателям
+INSERT INTO star.customer (id_customer, first_name, last_name, address, city, country, phone, email, gender)
+SELECT * FROM m_customer mc 
+
+-- Добовляем данные по продажам
+INSERT INTO star.sales (id_shop, id_product, id_customer, id_date, quantity)
+SELECT * FROM main.sales s 
 
 
 
