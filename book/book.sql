@@ -147,7 +147,6 @@ WITH t AS (
 	LEFT JOIN (SELECT * FROM main.autor a LEFT JOIN gender g ON g.id_gender = a.id_gender) a ON a.id_autor = ba.id_autor
 )
 SELECT
---	*
 	b.id_book
 	,b.title 
 	,b.price 
@@ -168,10 +167,10 @@ LEFT JOIN autor_b ab ON ab.id_book = b.id_book
 SELECT * FROM m_book
 
 ---------------------------
---РАБОЧИЕ ВОПРОСЫ
+ВОПРОСЫ
  
 
---Список из покупатели которые купиль больше всего книг?
+--Список из покупателей которые купиль больше всего книг?
 --Посчитайсе минимальный, средний, максимальный платеж и сумму всех платежей для каждого покупателя
 SELECT
 	s.id_customer
@@ -199,89 +198,70 @@ WITH best_book AS (
 )
 SELECT
 --	*
-	bb.id_product
-	,b.title
+	b.title
 	,bb.count_book
 FROM best_book bb
 LEFT JOIN main.book b ON b.id_book = bb.id_product
 
 
-
-
-
-------------------------------
--- НЕ РАБОЧИЕ ВОПРОСЫ
-
---Список из 10 городов, где больше всего покупают книги
-SELECT
-	t.city
-	,count(p.id_payment)
-FROM payment p
-LEFT JOIN (
-	SELECT 
-		c.id_customer
-		,c2.city
-	FROM customer c
-	LEFT JOIN address a ON c.id_customer = a.id_address
-	LEFT JOIN city c2 ON a.id_city = c2.id_city) AS t ON t.id_customer = p.id_customer
-GROUP BY t.city
-ORDER BY 2 DESC
-LIMIT 10
-
-
---Список из 10 самых популярных жанров
-WITH gener_cte AS (
-SELECT
-	bg.id_book
-	,g.gener 
-FROM book_gener bg 
-LEFT JOIN gener g ON g.id_gener = bg.id_gener
+--Сколько было проданно книг по городам?
+--EXPLAIN ANALYSE
+WITH shop_2 AS (
+	SELECT
+		s.id_shop
+		,count(s.quantity) AS soold_books
+	FROM main.sales s 
+	GROUP BY s.id_shop
+), city_2 AS (
+	WITH address_2 AS (
+		SELECT
+			a.id_address
+			,c.city
+		FROM address a
+		LEFT JOIN main.city c ON c.id_city = a.id_city
+	)
+	SELECT
+		s.id_shop
+		,a2.city
+	FROM shop s
+	LEFT JOIN address_2 a2 ON a2.id_address = s.id_address 
 )
 SELECT
-	gener
-	,count(p.id_book)
-FROM payment p
-LEFT JOIN gener_cte gc ON gc.id_book = p.id_book 
-GROUP BY gener
-ORDER BY 2 DESC
-LIMIT 10
+	c2.city
+	,s2.soold_books
+FROM shop_2 s2
+LEFT JOIN city_2 c2 ON c2.id_shop = s2.id_shop
+ORDER BY soold_books DESC 
 
 
---Посчитайте количество продаж по годам
-SELECT 
-	EXTRACT(YEAR FROM payment_date) AS sales_year
-	,count(id_payment)
-FROM dim.payment
-GROUP BY sales_year
-ORDER BY sales_year ASC
+--Посчитайте количество проданых книг по годам
+SELECT
+	d.YEAR
+	,count(s.quantity) AS sold_dooks
+FROM sales s
+LEFT JOIN (
+	SELECT
+		d.id_date
+		,EXTRACT(YEAR FROM dt) as YEAR
+	FROM "date" d) AS d ON d.id_date = s.id_date
+GROUP BY d.YEAR
+ORDER BY 1
 
 
---Последние 2 платежа для клиентов
+--Покажите 2 последних платежа для каждого клиента
 WITH t AS (
-SELECT 
-	id_customer
-	,b.price
-	,payment_date
-	,ROW_NUMBER () OVER (PARTITION BY p.id_customer ORDER BY payment_date DESC)
-FROM payment p
-LEFT JOIN book b ON b.id_book = p.id_book 
+	SELECT 
+		s.id_customer 
+		,s.id_shop 
+		,s.id_product 
+		,s.quantity 
+		,d.dt
+		,ROW_NUMBER() OVER(PARTITION BY s.id_customer ORDER BY d.dt DESC)
+	FROM sales s 
+	LEFT JOIN "date" d ON d.id_date = s.id_date
 )
 SELECT * FROM t
-WHERE ROW_NUMBER <= 2 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+WHERE "row_number" <= 2
 
 
 
