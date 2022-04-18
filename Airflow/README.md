@@ -159,7 +159,7 @@ def on_failure_callback(context):
     return send_message.execute(context)
 ~~~
 
-**Получим ошибку если даг упадет со статусом failed**
+**Получим ошибку если даг упадет со статусом failed**   
 ![Alt-текст](img/tg.png)
 
 
@@ -255,7 +255,7 @@ with DAG(dag_id='CURRENSY_PIPELINE',
 ![Alt-текст](img/cd.png)
 
 
-**После загрузки мы получим в базе таблицу с отчетоми по дням и курсом валют USD to RUB**
+**После загрузки мы получим в базе таблицу с отчетами по дням и курсом валют USD to RUB**
 ![Alt-текст](img/report_main.png)  
 
 &ensp;
