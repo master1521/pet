@@ -1,0 +1,21 @@
+version: 2
+
+sources:
+  - name: 'dvd'
+    database: dvd
+    schema: dvd-rental
+    tables:
+      - name: actor
+      - name: film
+      - name: film_actor
+      - name: category
+      - name: film_category
+      - name: store
+      - name: inventory
+      - name: rental
+      - name: payment
+      - name: staff
+      - name: customer
+      - name: address
+      - name: city
+      - name: country

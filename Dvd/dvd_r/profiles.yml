@@ -1,0 +1,12 @@
+pg_conf:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      threads: 4
+      host: localhost
+      port: 5555
+      user: postgres
+      pass: postgres
+      dbname: dvd
+      schema: dvd-rental
