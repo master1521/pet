@@ -93,6 +93,7 @@ FROM dvd."dvd-rental".rental r
 LEFT JOIN dvd."dvd-rental".inventory i ON r.inventory_id = i.inventory_id  
 
 
+# Витрина по аренде фильмов
 
 SELECT
 	r.rental_id
