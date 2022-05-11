@@ -129,4 +129,9 @@ dbt docs serve &
 ![Alt-текст](img/l1.png)
 
 
+### Если были правки можно удобно обновить все зависимости таблиц
+~~~
+dbt run -m address_list+
+~~~
+![Alt-текст](img/v1.png)
 
