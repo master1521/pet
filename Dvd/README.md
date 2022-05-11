@@ -53,7 +53,9 @@ dbt debug
 ~~~
 
 
-Создаем модель список пользователей
+## Создаем модели
+
+### Список покупателей
 ~~~
 SELECT
 	c.customer_id
@@ -61,41 +63,58 @@ SELECT
 	,c.email
 	,a.phone
 	,a.address
-	,c3.country
+	,a.country
+	,a.city
+	,c.create_date
+	,c.last_update
+	,c.active
+FROM {{ source('dvd', 'customer') }} AS c
+LEFT JOIN {{ ref('address_list') }} AS a ON a.address_id = c.address_id
+~~~
+
+
+### Список адресов
+~~~
+SELECT
+	a.address_id
+	,a.address
+	,a.district
+	,a.postal_code
+	,a.phone
+	,a.last_update
 	,c2.city
-FROM {{ source('dvd', 'customer')}} AS c
-LEFT JOIN {{ source('dvd', 'address')}} AS a ON a.address_id = c.address_id
+	,c3.country
+FROM {{ source('dvd', 'address')}} AS a
 LEFT JOIN {{ source('dvd', 'city')}} AS c2 ON a.city_id = c2.city_id
 LEFT JOIN {{ source('dvd', 'country')}} AS c3 ON c2.country_id = c3.country_id
 ~~~
 
-После компиляции получаем готовый SQL который раскатаем на основную схему dvd-rental
-~~~
-dbt compile
-~~~
+### Список магазинов
 ~~~
 SELECT
-	c.customer_id
-	,c.last_name
-	,c.email
-	,a.phone
+	s.store_id
+	,s.manager_staff_id
+	,s.last_update
 	,a.address
-	,c3.country
-	,c2.city
-FROM "dvd"."dvd-rental"."customer" AS c
-LEFT JOIN "dvd"."dvd-rental"."address" AS a ON a.address_id = c.address_id
-LEFT JOIN "dvd"."dvd-rental"."city" AS c2 ON a.city_id = c2.city_id
-LEFT JOIN "dvd"."dvd-rental"."country" AS c3 ON c2.country_id = c3.country_id
+	,a.city
+	,a.country
+FROM {{ source('dvd', 'store') }} AS s
+LEFT JOIN {{ ref('address_list') }} AS a ON a.address_id = s.address_id
 ~~~
 
 
-
-Раскатываем в виде view
+Раскатываем модели
 ~~~
-dbt run -m customer_list
+dbt run 
 ~~~
-
+### Покупатели  
 ![Alt-текст](img/customer_list.png)
+
+### Адреса  
+![Alt-текст](img/address_list.png)
+
+### Магазины
+![Alt-текст](img/store_list.png)
 
 
 Создаем документацию для dbt проекта
@@ -103,7 +122,7 @@ dbt run -m customer_list
 dbt docs generate
 ~~~
 
-Просмотр DAG 
+## DAG зависимостей 
 ~~~
 dbt docs serve &
 ~~~
