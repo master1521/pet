@@ -166,27 +166,59 @@ ALTER TABLE dvd."dvd-rental_marts".rental_mart ADD CONSTRAINT rental_pk PRIMARY 
 # Витрина платежей
 
 SELECT
-	*
-FROM dvd."dvd-rental".payment p
-LEFT JOIN dvd."dvd-rental_marts".rental_mart rm ON p.rental_id = rm.rental_rental_id
-LEFT JOIN dvd."dvd-rental".stuff_list s ON p.staff_id = s.staff_id 
-
-
-
-SELECT
 	p.payment_id
 	,p.customer_id
 	,p.staff_id
 	,p.rental_id
 	,p.amount
 	,p.payment_date
+	,rm.rental_rental_id
 	,rm.rental_inventory_id
-	,rm.rental_date, rm.rental_return_date, rm.day_rent, rm.stor_store_id, rm.stor_address, rm.stor_city, rm.stor_country, rm.film_film_id, rm.film_title, rm.film_description, rm.film_release_year, rm.film_rental_duration, rm.film_rental_rate, rm.film_rent_for_day, rm.film_length, rm.film_replacement_cost, rm.film_rating
-	,sl.staff_id, first_name, last_name, email, store_id, active, username, "password", last_update, picture, address, city, country
-FROM dvd."dvd-rental".payment p 
+	,rm.rental_customer_id
+	,rm.rental_staff_id
+	,rm.rental_date
+	,rm.rental_return_date
+	,rm.day_rent
+	,rm.film_film_id
+	,rm.film_title
+	,rm.film_description
+	,rm.film_release_year
+	,rm.film_rental_duration
+	,rm.film_rental_rate
+	,rm.film_rent_for_day
+	,rm.film_length
+	,rm.film_replacement_cost
+	,rm.film_rating
+	,s.staff_id
+	,s.first_name
+	,s.last_name
+	,s.email
+	,s.store_id
+	,s.active
+	,s.username
+	,s."password"
+	,s.picture
+	,s.address
+	,s.city
+	,s.country
+	,s.district
+	,s.postal_code
+	,s.phone
+	,cl.customer_id
+	,cl.first_name
+	,cl.last_name
+	,cl.email
+	,cl.phone
+	,cl.address
+	,cl.country
+	,cl.city
+	,cl.create_date
+	,cl.last_update
+	,cl.active
+FROM dvd."dvd-rental".payment p
 LEFT JOIN dvd."dvd-rental_marts".rental_mart rm ON p.rental_id = rm.rental_rental_id
-LEFT JOIN dvd."dvd-rental".stuff_list sl ON p.staff_id = sl.staff_id 
-
+LEFT JOIN dvd."dvd-rental".stuff_list s ON p.staff_id = s.staff_id 
+LEFT JOIN dvd."dvd-rental".customer_list cl ON p.customer_id = cl.customer_id 
 
 
 
