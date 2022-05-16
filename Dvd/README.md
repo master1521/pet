@@ -135,3 +135,17 @@ dbt run -m address_list+
 ~~~
 ![Alt-текст](img/v1.png)
 
+
+**Добавляем составной первичный ключ на витрину аренды**
+~~~
+ALTER TABLE dvd."dvd-rental_marts".rental_mart ADD CONSTRAINT rental_pk PRIMARY KEY (rental_id, inventory_id, customer_id, staff_id, film_id);
+
+~~~
+
+
+
+
+
+
+
+

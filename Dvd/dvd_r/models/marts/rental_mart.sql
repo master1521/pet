@@ -1,13 +1,18 @@
 SELECT
-	r.rental_id
-	,r.rental_date
-	,r.return_date
+	r.rental_id                                             AS rental_rental_id
+	,r.inventory_id                                         AS rental_inventory_id
+	,r.customer_id                                          AS rental_customer_id
+	,r.staff_id                                             AS rental_staff_id
+	,r.rental_date                                          AS rental_date
+	,r.return_date                                          AS rental_return_date
 	,EXTRACT(DAY FROM (r.return_date - r.rental_date))		AS day_rent
+	,sl.store_id                                            AS stor_store_id
 	,sl.address 											AS stor_address
 	,sl.city 												AS stor_city
 	,sl.country 											AS stor_country
+	,f.film_id                                              AS film_film_id
 	,f.title 												AS film_title
-	,f.description											AS  film_description
+	,f.description											AS film_description
 	,f.release_year 										AS film_release_year
 	,f.rental_duration 										AS film_rental_duration
 	,f.rental_rate 											AS film_rental_rate
@@ -15,6 +20,7 @@ SELECT
 	,f.length 												AS film_length
 	,f.replacement_cost 									AS film_replacement_cost
 	,f.rating 												AS film_rating
+	,cl.customer_id                                         AS customer_customer_id
 	,cl.first_name 											AS customer_first_name
 	,cl.last_name 											AS customer_last_name
 	,cl.email 												AS customer_email
@@ -22,6 +28,7 @@ SELECT
 	,cl.address 											AS customer_address
 	,cl.country 											AS customer_country
 	,cl.city 												AS customer_city
+	,sl2.staff_id                                           AS stuff_staff_id
 	,sl2.first_name 										AS stuff_first_name
 	,sl2.last_name 											AS stuff_last_name
 	,sl2.address 											AS stuff_address

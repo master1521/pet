@@ -141,6 +141,7 @@ LEFT JOIN dvd."dvd-rental".stor_list sl
 LEFT JOIN dvd."dvd-rental".stuff_list sl2 
 	ON r.staff_id = sl2.staff_id 
 
+# Таблица фильмов
 
 SELECT 
 	f.film_id
@@ -156,6 +157,48 @@ SELECT
 FROM dvd."dvd-rental".film  AS f
 LEFT JOIN dvd."dvd-rental"."language" AS l 
 	ON f.language_id = l.language_id 
+
+# Добавляем PK
+
+ALTER TABLE dvd."dvd-rental_marts".rental_mart ADD CONSTRAINT rental_pk PRIMARY KEY (rental_id, inventory_id, customer_id, staff_id, film_id);
+
+
+# Витрина платежей
+
+SELECT
+	*
+FROM dvd."dvd-rental".payment p
+LEFT JOIN dvd."dvd-rental_marts".rental_mart rm ON p.rental_id = rm.rental_rental_id
+LEFT JOIN dvd."dvd-rental".stuff_list s ON p.staff_id = s.staff_id 
+
+
+
+SELECT
+	p.payment_id
+	,p.customer_id
+	,p.staff_id
+	,p.rental_id
+	,p.amount
+	,p.payment_date
+	,rm.rental_inventory_id
+	,rm.rental_date, rm.rental_return_date, rm.day_rent, rm.stor_store_id, rm.stor_address, rm.stor_city, rm.stor_country, rm.film_film_id, rm.film_title, rm.film_description, rm.film_release_year, rm.film_rental_duration, rm.film_rental_rate, rm.film_rent_for_day, rm.film_length, rm.film_replacement_cost, rm.film_rating
+	,sl.staff_id, first_name, last_name, email, store_id, active, username, "password", last_update, picture, address, city, country
+FROM dvd."dvd-rental".payment p 
+LEFT JOIN dvd."dvd-rental_marts".rental_mart rm ON p.rental_id = rm.rental_rental_id
+LEFT JOIN dvd."dvd-rental".stuff_list sl ON p.staff_id = sl.staff_id 
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

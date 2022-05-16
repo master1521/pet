@@ -35,6 +35,7 @@ models:
   dvd_r:
     main:
       +materialized: view
+      +tags: VIEW
     marts:
       +materialized: incremental
       +schema: marts

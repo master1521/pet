@@ -9,8 +9,11 @@ SELECT
     ,st.password
     ,st.last_update
     ,st.picture
-    ,s.address
-    ,s.city
-    ,s.country
+    ,a.address
+    ,a.city
+    ,a.country
+    ,a.district
+    ,a.postal_code
+    ,a.phone
 FROM {{ source('dvd', 'staff') }} AS st
-LEFT JOIN {{ ref('stor_list') }} AS s ON st.store_id = s.store_id
+LEFT JOIN {{ ref('address_list') }} AS a ON st.address_id = a.address_id
