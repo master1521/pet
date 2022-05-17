@@ -2,6 +2,10 @@
 **Pipeline по курсу валют**  
 https://github.com/master1521/pet/tree/master/Airflow  
 
+## DBT
+**Создание витрин и автоматизация с dbt**
+https://github.com/master1521/pet/tree/master/Dvd
+
 ## SQL  
 **Авиаперевозки по РФ**  
 https://github.com/master1521/pet/blob/master/avia/sql_air_transportation.pdf  
