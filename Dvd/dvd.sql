@@ -243,7 +243,10 @@ ORDER BY p.payment_customer_id DESC
 
 
 
-
+SELECT
+	*
+FROM dvd."dvd-rental_marts".inventory_mart im
+WHERE im.rental_rate < 0
 
 
 
