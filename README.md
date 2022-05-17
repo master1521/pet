@@ -3,8 +3,8 @@
 https://github.com/master1521/pet/tree/master/Airflow  
 
 ## DBT
-**Создание витрин и автоматизация с dbt**
-https://github.com/master1521/pet/tree/master/Dvd
+**Создание витрин и автоматизация с dbt**  
+https://github.com/master1521/pet/tree/master/Dvd  
 
 ## SQL  
 **Авиаперевозки по РФ**  
