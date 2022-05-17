@@ -1,8 +1,8 @@
 SELECT
     i.inventory_id
-    ,i.film_id AS inventory_film_id
-    ,i.store_id AS inventory_store_id
-    ,i.last_update AS inventory_last_update
+    ,i.film_id                          AS inventory_film_id
+    ,i.store_id                         AS inventory_store_id
+    ,i.last_update                      AS inventory_last_update
     ,f.film_id
     ,f.title
     ,f.description

@@ -222,7 +222,24 @@ LEFT JOIN dvd."dvd-rental".customer_list cl ON p.customer_id = cl.customer_id
 
 
 
+-- Сравниваем данные после сборки витрины с основной таблицей кол строк, суммы и тд
 
+SELECT 
+	p.customer_id 
+	,sum(p.amount) AS amount 
+	,count(rental_id) AS count_rental_id
+FROM dvd."dvd-rental".payment p
+GROUP BY p.customer_id 
+ORDER BY p.customer_id DESC 
+
+
+SELECT 
+	p.payment_customer_id 
+	,sum(p.amount) AS amount 
+	,count(p.payment_rental_id) AS count_rental_id
+FROM dvd."dvd-rental_marts".payment_mart p
+GROUP BY p.payment_customer_id 
+ORDER BY p.payment_customer_id DESC
 
 
 

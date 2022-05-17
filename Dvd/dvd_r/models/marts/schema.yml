@@ -1,0 +1,31 @@
+version: 2
+
+models:
+  - name: inventory_mart
+    columns:
+      - name: inventory_id
+        tests:
+          - unique
+          - not_null
+          - relationships:
+              to: source('dvd', 'inventory')
+              field: inventory_id
+
+      - name: inventory_film_id
+        tests:
+          - not_null
+          - relationships:
+              to: source('dvd', 'film')
+              field: film_id
+
+      - name: inventory_store_id
+        tests:
+          - not_null
+          - relationships:
+              to: source('dvd', 'store')
+              field: store_id
+
+      - name: manager_staff_id
+        tests:
+          - accepted_values:
+              values: [1, 2]
