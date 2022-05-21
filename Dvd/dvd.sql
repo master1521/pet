@@ -264,10 +264,26 @@ WHERE im.rental_rate < 0
 
 
 
+CREATE TABLE IF NOT EXISTS pipeline."SY".row_data (
+    id serial,
+    date_creation timestamp DEFAULT now(),
+    date date,
+    value JSONB
+   );
+   
+
+SELECT 
+	dd.currency 
+	,max(dd.value) 
+FROM pipeline."SY".df_data dd 
+GROUP BY dd.currency
 
 
 
-
+SELECT 
+* 
+FROM pipeline."SY".df_data dd 
+WHERE dd.dt = '2022-05-15'
 
 
 
