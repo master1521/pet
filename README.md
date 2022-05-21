@@ -2,8 +2,8 @@
 **Pipeline ETL по курсу валют**  
 https://github.com/master1521/pet/tree/master/Airflow  
 
-**Pipeline ELT currency**
-https://github.com/master1521/pet/tree/master/Airflow_2
+**Pipeline ELT currency**  
+https://github.com/master1521/pet/tree/master/Airflow_2  
 
 
 ## DBT
