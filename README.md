@@ -1,3 +1,7 @@
+## GitLab CI/CD
+**Gitlab CI/CD with Airflow**
+https://github.com/master1521/pet/tree/master/GitLab_CI_CD 
+
 ## Airflow
 **Pipeline ETL по курсу валют**  
 https://github.com/master1521/pet/tree/master/Airflow  

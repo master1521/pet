@@ -1,0 +1,33 @@
+version: '3.6'
+services:
+  gitlab_web:
+    image: 'gitlab/gitlab-ce:latest'
+    hostname: 'gitlab.ivan.home'
+    environment:
+      GITLAB_HOME: '/home/ivan1/Desktop/GitLab1/'
+      GITLAB_OMNIBUS_CONFIG: |
+        external_url 'http://gitlab.ivan.home:8929'
+        gitlab_rails['gitlab_shell_ssh_port'] = 2224
+    ports:
+      - '8929:8929'
+      - '2224:22'
+    volumes:
+      - '/home/ivan1/Desktop/GitLab1/config:/etc/gitlab'
+      - '/home/ivan1/Desktop/GitLab1/logs:/var/log/gitlab'
+      - '/home/ivan1/Desktop/GitLab1/data:/var/opt/gitlab'
+    shm_size: '256m'
+
+  gitlab_runner:
+    image: 'gitlab/gitlab-runner:latest'
+    #restart: always
+    volumes:
+      - '/var/run/docker.sock:/var/run/docker.sock'
+      - '/home/ivan1/Desktop/GitLab1/etc/gitlab-runner:/etc/gitlab-runner'
+    depends_on:
+      - 'gitlab_web'
+    healthcheck:
+      test: ["CMD", "gitlab-runner", "-v"]
+      interval: 2s
+      timeout: 3s
+      retries: 10
+

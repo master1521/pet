@@ -1,0 +1,50 @@
+stages:
+  - Test
+  - Deploy
+
+before_script:
+  - chmod 600 $SSH_KEY
+
+variables:
+  APP_WORK_DIR: /home/app1/Desktop/Airflow1/
+
+flake8:
+  image: "python:3.8"
+  stage: Test
+  script:
+    - python -V
+    - pip install -r requirements.txt
+    - flake8 --max-line-length=120 ./dags/*.py
+
+chek_file:
+  stage: Test
+  rules:
+    - exists:
+      - requirements.txt
+  script: echo "File wit requirements exists"
+
+ping_airflow_host:
+  stage: Test
+  before_script:
+    - apt update && apt -y upgrade && apt install -y iputils-ping iproute2 traceroute
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+  script:
+    - ip a
+    - ip r
+    - ping 192.168.0.103 -c 5
+    - traceroute 192.168.0.103
+
+deploy:
+  stage: Deploy
+  needs:
+    - flake8
+    - ping_airflow_host
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+  script:
+    - ls -l ./dags/*.py
+    - apt update && apt -y upgrade
+    - apt install -y openssh-client
+    - scp -i $SSH_KEY -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -r ./dags app1@192.168.0.103:$APP_WORK_DIR
+
