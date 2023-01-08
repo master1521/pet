@@ -120,7 +120,7 @@ docker run --rm --network gitlab1_default -it -v /home/ivan1/Desktop/GitLab1/etc
 3 задачи для проверки на стадии тест:   
 **flake8** - Проверяет синтаксис файлов *.py в папке с дагами   
 **chek_file** - Проверяет есть ли файл с зависимостями   
-**ping_airflow_host** - Проверяет доступин ли сервер для загруски файлов  
+**ping_airflow_host** - Проверяет доступин ли сервер для загрузки файлов  
 
 1 задача для загрузки файлов на сервер   
 **deploy** - Загружает папку с дагами на сервер
@@ -188,7 +188,12 @@ deploy:
     - apt update && apt -y upgrade
     - apt install -y openssh-client
     - scp -i $SSH_KEY -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -r ./dags app1@192.168.0.103:$APP_WORK_DIR
-
+  environment:
+    name: dev_airflow
+    url: http://airflow.ivan.home:8080
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: manual
 ~~~
 
 
