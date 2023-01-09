@@ -137,6 +137,10 @@ docker run --rm --network gitlab1_default -it -v /home/ivan1/Desktop/GitLab1/etc
 
 ![Alt-текст](img/a_gitlab2.png)   
 
+Если возникла проблема с развертыванием, можно повторить попытку или выполнить откат через **Deployments > Environments**
+![Alt-текст](img/dev_airflow.png)   
+
+
 ### .gitlab-ci.yml
 ~~~
 stages:
