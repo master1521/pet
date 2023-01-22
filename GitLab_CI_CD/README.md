@@ -1,23 +1,96 @@
-# GitLab CI/CD pipeline with Airflow
+# GitLab CI/CD pipeline
 
 **Это НЕ инструкция по настройке!**
 ## Задача:
+- Поднять домашний сервер который бедет доступен в интернете через прокси
 - Настроить CI/CD процесс добавления, проверки и деплоя дагов в GitLab 
+- Настроить прокси
 - Подять сервер GitLab 
 - Поднять сервер Airflow
+- Подключить HTTPS
 
 ### Схема хостов
-![Alt-текст](img/a_shema1.png)
+![Alt-текст](img/home.png)
 
-### Создаем docker-compose файл для GitLab
-Перед запуском добавляем переменную из папки проекта
-export GITLAB_HOME=$(pwd)
+### Подключаем DDNS
+Настраиваем динамический dns для домашнего сервера и привязываем в к публичному IP от провайдера домены
+- master1000.duckdns.org для gitlab    
+- master2000.duckdns.org для airflow  
+**Заметка: Провайдер используеn 2 NAT так что публичный IP нужно покумать, и он будет динамическим,
+для этого мне и нужен DDNS**
 
+### Настраиваем перенаправление трафика
+Нужно добавить маршруты на роутер, чтобы пакеты которые приходят на публичный IP перенаправлялись
+на прокси сервер NGINX
+![Alt-текст](img/NAT1.png)
+
+### Настраиваем NGINX как обратный прокси
+**/etc/nginx/conf.d/ivan.conf**
+~~~
+server {
+    listen 80;
+    server_name master1000.duckdns.org www.master1000.duckdns.org;
+    return 301 https://master1000.duckdns.org$request_uri;
+}
+
+server {
+    listen 80;
+    server_name master2000.duckdns.org www.master2000.duckdns.org;
+    return 301 https://master1000.duckdns.org$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    server_name master2000.duckdns.org www.master2000.duckdns.org;
+    ssl_certificate /etc/nginx/ssl/live/master2000.duckdns.org/fullchain.pem;
+    ssl_certificate_key /etc/nginx/ssl/live/master2000.duckdns.org/privkey.pem;
+
+    location / {
+        proxy_pass http://192.168.0.105:8080;
+        client_max_body_size               0;
+        proxy_http_version                 1.1;
+        proxy_cache_bypass                 $http_upgrade;
+        proxy_set_header Upgrade           $http_upgrade;
+        proxy_set_header Host              $host;
+        proxy_set_header X-Real-IP         $remote_addr;
+        proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Host  $host;
+        proxy_set_header X-Forwarded-Port  $server_port;
+    }
+}
+
+server {
+    listen 443 ssl;
+    server_name master1000.duckdns.org www.master1000.duckdns.org;
+    ssl_certificate /etc/nginx/ssl/live/master1000.duckdns.org/fullchain.pem;
+    ssl_certificate_key /etc/nginx/ssl/live/master1000.duckdns.org/privkey.pem;
+
+    location / {
+        proxy_pass http://gitlab_web:8929;
+	    client_max_body_size               0;
+        proxy_http_version                 1.1;
+        proxy_cache_bypass                 $http_upgrade;
+        proxy_set_header Upgrade           $http_upgrade;
+        proxy_set_header Host              $host;
+        proxy_set_header X-Real-IP         $remote_addr;
+        proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Host  $host;
+        proxy_set_header X-Forwarded-Port  $server_port;
+    }
+}
+
+~~~
+
+
+### Создаем docker-compose для NGINX и GitLab
 ~~~
 version: '3.6'
 services:
   gitlab_web:
     image: 'gitlab/gitlab-ce:latest'
+    restart: always
     hostname: 'gitlab.ivan.home'
     environment:
       GITLAB_HOME: '/home/ivan1/Desktop/GitLab1/'
@@ -35,7 +108,7 @@ services:
 
   gitlab_runner:
     image: 'gitlab/gitlab-runner:latest'
-    #restart: always
+    restart: always
     volumes:
       - '/var/run/docker.sock:/var/run/docker.sock'
       - '/home/ivan1/Desktop/GitLab1/etc/gitlab-runner:/etc/gitlab-runner'
@@ -46,9 +119,35 @@ services:
       interval: 2s
       timeout: 3s
       retries: 10
+  webserver:
+    image: nginx:latest
+    ports:
+      - 80:80
+      - 443:443
+    restart: always
+    volumes:
+      - ./nginx/site/:/etc/nginx/site/:ro
+      - ./nginx/conf/:/etc/nginx/conf.d/:ro
+      - ./certbot/www:/var/www/certbot/:ro
+      - ./certbot/conf/:/etc/nginx/ssl/:ro
+  certbot:
+    image: certbot/certbot:latest
+    volumes:
+      - ./certbot/www/:/var/www/certbot/:rw
+      - ./certbot/conf/:/etc/letsencrypt/:rw
 ~~~
 
-![Alt-текст](img/a_docker1.png)
+![Alt-текст](img/gitlab_docker.png)
+
+### Подключаем HTTPS
+~~~
+docker-compose up -d
+docker-compose run --rm certbot certonly --webroot --webroot-path /var/www/certbot/ -d master1000.duckdns.org -d www.master1000.duckdns.org -d master2000.duckdns.org -d www.master2000.duckdns.org
+docker-compose exec webserver nginx -s reload
+~~~
+
+![Alt-текст](img/airflow_web.png)  
+![Alt-текст](img/gitlab_web.png)
 
 
 ### Добавляем и настреваем GitLab Runner для группы
@@ -106,9 +205,9 @@ docker run --rm --network gitlab1_default -it -v /home/ivan1/Desktop/GitLab1/etc
     network_mode = "gitlab1_default"
 ~~~
 
-**На вкладке CI/CD проека или группы можно посмотреть доступные раннеры для запуска задач**  
-![Alt-текст](img/a_runner1.png)
+**На вкладке CI/CD проека или группы можно посмотреть доступные раннеры для запуска задач**   
 
+![Alt-текст](img/a_runner1.png)
 
 ### Настройка .gitlab-ci.yml
 
@@ -177,8 +276,8 @@ ping_airflow_host:
   script:
     - ip a
     - ip r
-    - ping 192.168.0.103 -c 5
-    - traceroute 192.168.0.103
+    - ping 192.168.0.105 -c 5
+    - traceroute 192.168.0.105
 
 deploy:
   stage: Deploy
@@ -191,7 +290,7 @@ deploy:
     - ls -l ./dags/*.py
     - apt update && apt -y upgrade
     - apt install -y openssh-client
-    - scp -i $SSH_KEY -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -r ./dags app1@192.168.0.103:$APP_WORK_DIR
+    - scp -i $SSH_KEY -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -r ./dags app1@192.168.0.105:$APP_WORK_DIR
   environment:
     name: dev_airflow
     url: http://airflow.ivan.home:8080
@@ -201,7 +300,7 @@ deploy:
 ~~~
 
 
-## Используем стандартный docker-compose для Airflow из документации
+### Используем стандартный docker-compose для Airflow 
 ~~~
 version: '3'
 x-airflow-common:
