@@ -3,11 +3,11 @@
 https://github.com/master1521/pet/tree/master/DataVault
 
 ## Telegram bot
-**Telegram бот для загрузки музыки c youtube**
+**Telegram бот для загрузки музыки c youtube**   
 https://github.com/master1521/pet/tree/master/TgYouTube
 
 ## GitLab CI/CD
-**Gitlab CI/CD with Airflow**
+**Gitlab CI/CD with Airflow**   
 https://github.com/master1521/pet/tree/master/GitLab_CI_CD 
 
 ## Airflow
