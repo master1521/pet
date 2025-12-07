@@ -1,0 +1,78 @@
+FROM jupyter/pyspark-notebook:spark-3.5.0
+
+USER root
+
+# Установка системных утилит
+RUN apt-get update && apt-get install -y \
+    vim \
+    git \
+    tree \
+    wget \
+    htop \
+    net-tools \
+    iputils-ping \
+    traceroute \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+USER jovyan
+
+# Python пакеты (pyspark уже установлен в базовом образе)
+RUN pip install --no-cache-dir \
+    pyiceberg==0.7.0 \
+    delta-spark==3.2.0 \
+    great-expectations==0.18.0
+
+# Переключение на root для скачивания JAR в защищенную директорию
+USER root
+
+# Скачивание JAR файлов в $SPARK_HOME/jars
+
+# Iceberg runtime: 2.13 → 2.12, версия 1.7.1 → 1.6.1
+RUN wget https://repo1.maven.org/maven2/org/apache/iceberg/iceberg-spark-runtime-3.5_2.12/1.6.1/iceberg-spark-runtime-3.5_2.12-1.6.1.jar \
+    -O $SPARK_HOME/jars/iceberg-spark-runtime-3.5_2.12-1.6.1.jar
+
+# AWS bundle: версия 1.7.1 → 1.6.1 (синхронизация)
+RUN wget https://repo1.maven.org/maven2/org/apache/iceberg/iceberg-aws-bundle/1.6.1/iceberg-aws-bundle-1.6.1.jar \
+    -O $SPARK_HOME/jars/iceberg-aws-bundle-1.6.1.jar
+
+# Hadoop AWS для работы с S3
+RUN wget https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-aws/3.3.4/hadoop-aws-3.3.4.jar \
+    -O $SPARK_HOME/jars/hadoop-aws-3.3.4.jar && \
+    wget https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-bundle/1.12.367/aws-java-sdk-bundle-1.12.367.jar \
+    -O $SPARK_HOME/jars/aws-java-sdk-bundle-1.12.367.jar
+
+# PostgreSQL JDBC драйвер
+RUN wget https://repo1.maven.org/maven2/org/postgresql/postgresql/42.7.2/postgresql-42.7.2.jar \
+    -O $SPARK_HOME/jars/postgresql-42.7.2.jar
+
+# Настройка переменных окружения для Spark
+ENV SPARK_HOME=/usr/local/spark
+ENV PATH=$SPARK_HOME/bin:$PATH
+ENV PYTHONPATH=$SPARK_HOME/python:$SPARK_HOME/python/lib/py4j-0.10.9.7-src.zip
+
+# Настройка конфигурации Spark для Jupyter
+ENV SPARK_DRIVER_MEMORY=4g
+ENV SPARK_EXECUTOR_MEMORY=4g
+
+# Создание директории для Spark конфигов
+RUN mkdir -p $SPARK_HOME/conf
+
+# Настройка spark-defaults.conf для REST Catalog и MinIO
+RUN echo "spark.sql.extensions=org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions" >> $SPARK_HOME/conf/spark-defaults.conf && \
+    echo "spark.sql.catalog.iceberg=org.apache.iceberg.spark.SparkCatalog" >> $SPARK_HOME/conf/spark-defaults.conf && \
+    echo "spark.sql.catalog.iceberg.type=rest" >> $SPARK_HOME/conf/spark-defaults.conf && \
+    echo "spark.sql.catalog.iceberg.uri=http://iceberg-rest:8181" >> $SPARK_HOME/conf/spark-defaults.conf && \
+    echo "spark.sql.catalog.iceberg.io-impl=org.apache.iceberg.aws.s3.S3FileIO" >> $SPARK_HOME/conf/spark-defaults.conf && \
+    echo "spark.sql.catalog.iceberg.warehouse=s3://warehouse/" >> $SPARK_HOME/conf/spark-defaults.conf && \
+    echo "spark.sql.catalog.iceberg.s3.endpoint=http://minio:9000" >> $SPARK_HOME/conf/spark-defaults.conf && \
+    echo "spark.sql.catalog.iceberg.s3.path-style-access=true" >> $SPARK_HOME/conf/spark-defaults.conf && \
+    echo "spark.hadoop.fs.s3a.endpoint=http://minio:9000" >> $SPARK_HOME/conf/spark-defaults.conf && \
+    echo "spark.hadoop.fs.s3a.path.style.access=true" >> $SPARK_HOME/conf/spark-defaults.conf && \
+    echo "spark.hadoop.fs.s3a.impl=org.apache.hadoop.fs.s3a.S3AFileSystem" >> $SPARK_HOME/conf/spark-defaults.conf && \
+    echo "spark.hadoop.fs.s3a.connection.ssl.enabled=false" >> $SPARK_HOME/conf/spark-defaults.conf && \
+    echo "spark.hadoop.fs.s3a.aws.credentials.provider=org.apache.hadoop.fs.s3a.SimpleAWSCredentialsProvider" >> $SPARK_HOME/conf/spark-defaults.conf
+
+USER jovyan
+
+WORKDIR /home/jovyan/work

@@ -1,3 +1,8 @@
+
+## Apache Iceberg
+**Настройка локальной среды Data LakeHouse для изучения работы с iceberg**
+https://github.com/master1521/pet/tree/master/SparkIcebergJupyter
+
 ## Data Vault   
 **Моделирование по Data Vault**   
 https://github.com/master1521/pet/tree/master/DataVault

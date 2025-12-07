@@ -1,0 +1,133 @@
+services:
+  # PostgreSQL для Iceberg Catalog
+  postgres:
+    image: postgres:15
+    container_name: iceberg_postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: iceberg_catalog
+    ports:
+      - 5432:5432
+    networks:
+      - iceberg_net
+    volumes:
+      - ./pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d iceberg_catalog"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  # Iceberg REST Catalog
+  iceberg-rest:
+    image: tabulario/iceberg-rest:1.6.0
+    container_name: iceberg-rest
+    networks:
+      - iceberg_net
+    ports:
+      - 8181:8181
+    environment:
+      - AWS_ACCESS_KEY_ID=admin
+      - AWS_SECRET_ACCESS_KEY=password
+      - AWS_REGION=us-east-1
+      - CATALOG_WAREHOUSE=s3://warehouse/
+      - CATALOG_IO__IMPL=org.apache.iceberg.aws.s3.S3FileIO
+      - CATALOG_S3_ENDPOINT=http://minio:9000
+      - CATALOG_URI=jdbc:postgresql://postgres:5432/iceberg_catalog?user=postgres&password=postgres
+      - CATALOG_JDBC_DRIVER=org.postgresql.Driver
+      - CATALOG_JDBC_USER=postgres
+      - CATALOG_JDBC_PASSWORD=postgres
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # MinIO (S3)
+  minio:
+    image: minio/minio
+    container_name: minio
+    environment:
+      - MINIO_ROOT_USER=admin
+      - MINIO_ROOT_PASSWORD=password
+      - MINIO_DOMAIN=minio
+    networks:
+      iceberg_net:
+        aliases:
+          - warehouse.minio
+    volumes:
+      - ./minio-data:/data
+    ports:
+      - 9001:9001
+      - 9000:9000
+    command: ["server", "/data", "--address", ":9000", "--console-address", ":9001"]
+
+  # MinIO Client для инициализации bucket
+  mc:
+    depends_on:
+      - minio
+    image: minio/mc
+    container_name: mc
+    networks:
+      - iceberg_net
+    environment:
+      - AWS_ACCESS_KEY_ID=admin
+      - AWS_SECRET_ACCESS_KEY=password
+      - AWS_REGION=us-east-1
+    entrypoint: |
+      /bin/sh -c "
+      until (/usr/bin/mc alias set minio http://minio:9000 admin password) do echo '...waiting...' && sleep 1; done;
+      /usr/bin/mc mb minio/warehouse;
+      /usr/bin/mc policy set public minio/warehouse;
+      tail -f /dev/null
+      "
+
+  # Spark Jupyter с Iceberg
+  spark-jupyter:
+    build:
+      context: .
+      dockerfile: DockerfileSparkIcebergJupyter
+    image: spark-iceberg-jupyter:3.5.0-iceberg1.7.1
+    container_name: spark-iceberg-notebook
+    networks:
+      - iceberg_net
+    ports:
+      - 8888:8888
+      - 4040:4040
+    volumes:
+      - ./notebooks:/home/jovyan/work
+      - ./data:/home/jovyan/data
+    environment:
+      - JUPYTER_ENABLE_LAB=yes
+      - GRANT_SUDO=yes
+      - SPARK_DRIVER_MEMORY=4g
+      - SPARK_EXECUTOR_MEMORY=4g
+      - AWS_ACCESS_KEY_ID=admin
+      - AWS_SECRET_ACCESS_KEY=password
+      - AWS_REGION=us-east-1
+    command: start-notebook.sh --NotebookApp.token='' --NotebookApp.password=''
+    depends_on:
+      - iceberg-rest
+      - minio
+
+  # Trino
+  trino:
+    image: trinodb/trino:464
+    container_name: trino
+    networks:
+      - iceberg_net
+    ports:
+      - 8080:8080
+    volumes:
+      - ./trino/catalog:/etc/trino/catalog
+    environment:
+      - AWS_ACCESS_KEY_ID=admin
+      - AWS_SECRET_ACCESS_KEY=password
+      - AWS_REGION=us-east-1
+    depends_on:
+      - iceberg-rest
+      - minio
+
+networks:
+  iceberg_net:
+    driver: bridge
