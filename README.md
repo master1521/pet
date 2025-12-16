@@ -1,3 +1,6 @@
+## Spark Standalone кластер
+**Локальный распределенный Spark класткер в режиме Standalone для тестов и обучения**
+https://github.com/master1521/pet/tree/master/Spark
 
 ## Apache Iceberg
 **Настройка локальной среды Data LakeHouse для изучения работы с iceberg**
