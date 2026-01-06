@@ -221,7 +221,6 @@ kubectl apply -n argocd -f argo-install.yaml
 ~~~
 
 Проверяем после установки   
-Проверяем после установки   
 ~~~
 kubectl get all -n argocd -o wide
 ~~~

@@ -1,13 +1,13 @@
 ## K8S + Minikube + Helm + ArgoCd
-**Стенд для изучения K8S + Minikube + Helm + ArgoCd**
+**Стенд для изучения K8S + Minikube + Helm + ArgoCd**   
 https://github.com/master1521/pet/tree/master/nginx-gitops
 
 ## Spark Standalone кластер
-**Локальный распределенный Spark класткер в режиме Standalone для тестов и обучения**
+**Локальный распределенный Spark класткер в режиме Standalone для тестов и обучения**   
 https://github.com/master1521/pet/tree/master/Spark
 
 ## Apache Iceberg
-**Настройка локальной среды Data LakeHouse для изучения работы с iceberg**
+**Настройка локальной среды Data LakeHouse для изучения работы с iceberg**   
 https://github.com/master1521/pet/tree/master/SparkIcebergJupyter
 
 ## Data Vault   
