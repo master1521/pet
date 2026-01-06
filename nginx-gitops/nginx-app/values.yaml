@@ -1,0 +1,53 @@
+appName: nginx
+
+replicaCount: 50
+
+image:
+  repository: nginx
+  tag: "1.25"
+  pullPolicy: IfNotPresent
+
+service:
+  type: NodePort
+  port: 80
+  targetPort: 80
+
+config:
+  dbHost: "dev-db.local"
+  dbUser: "dev_user"
+  logLevel: "DEBUG"
+
+# Не для прода!
+secrets:
+  apiToken: "Xe3v&om:ef/"
+  password: "plR34lf$d0)1"
+
+storage:
+  size: 1Gi
+  storageClassName: standard
+
+ingress:
+  enabled: true
+  host: "nginx.local"
+
+debug:
+  enabled: true
+  replicas: 1
+  image: "ubuntu:22.04"
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+
+extraVolumes:
+  - name: html-config
+    configMap:
+      name: nginx-html-config
+      defaultMode: 0644
+
+extraVolumeMounts:
+  - name: html-config
+    mountPath: /usr/share/nginx/html

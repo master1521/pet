@@ -1,0 +1,6 @@
+apiVersion: v2
+name: nginx-app
+description: Simple nginx Helm chart
+type: application
+version: 0.1.0 # версия чарта, стоит менять когда меняешь что-то в чартах
+appVersion: "1.16.0" # версия приложения (nginx)

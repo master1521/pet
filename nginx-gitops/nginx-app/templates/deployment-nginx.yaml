@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "nginx-app.fullname" . }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: nginx
+  template:  # шаблон Pod
+    metadata:
+      labels:
+        app: {{ .Values.appName }}
+    spec:
+      topologySpreadConstraints: # Распределять по нодам (hostname = нода) На проде такое не нужно
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              app: nginx
+      containers:
+      - name: nginx
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "50Mi"
+          limits:
+            cpu: "200m"
+            memory: "100Mi"
+        env:
+          - name: DB_HOST
+            valueFrom:
+              configMapKeyRef:
+                name: {{ include "nginx-app.fullname" . }}-config
+                key: DB_HOST
+          - name: DB_USERNAME
+            valueFrom:
+              configMapKeyRef:
+                name: {{ include "nginx-app.fullname" . }}-config
+                key: DB_USERNAME
+          # Secret (закрытые)
+          - name: API_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: {{ include "nginx-app.fullname" . }}-secret
+                key: API_TOKEN
+          - name: PASS
+            valueFrom:
+              secretKeyRef:
+                name: {{ include "nginx-app.fullname" . }}-secret
+                key: PASS
+        envFrom:
+          - configMapRef:
+              name: {{ include "nginx-app.fullname" . }}-config
+        volumeMounts:
+        - mountPath: /usr/share/nginx/html/index.html
+          name: html-config
+          subPath: index.html
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ include "nginx-app.fullname" . }}-pvc
+        - name: html-config
+          configMap:
+            name: {{ include "nginx-app.fullname" . }}-html
+            defaultMode: 0644
+

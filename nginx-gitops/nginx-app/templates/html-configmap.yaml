@@ -1,0 +1,25 @@
+# templates/html-configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "nginx-app.fullname" . }}-html
+  labels:
+    app: {{ .Values.appName }}
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html>
+    <head><title>Multi-Node</title></head>
+    <body style='font-family:Arial;padding:50px;background:#f0f8ff;text-align:center'>
+    <h1>Helm Nginx Multi-Node Cluster</h1>
+    <div style='background:white;padding:30px;border-radius:15px;max-width:500px;margin:auto;box-shadow:0 4px 8px rgba(0,0,0,0.1)'>
+    <h2>Cluster READY!</h2>
+    <p><strong>5 Nginx Pods</strong> + <strong>1 Debug Pod</strong></p>
+    <p><strong>3 Nodes:</strong> multinode3, m02, m03</p>
+    <p><strong>PVC:</strong> helm-ng-nginx-app-pvc (1Gi)</p>
+    <p><strong>Namespace:</strong> dev</p>
+    <hr>
+    <small>Minikube Multi-Node + Helm Chart<br>Kubernetes Training COMPLETE!</small>
+    </div>
+    </body>
+    </html>

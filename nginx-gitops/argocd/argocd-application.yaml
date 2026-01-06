@@ -1,0 +1,37 @@
+# argocd-application.yaml
+apiVersion: argoproj.io/v1alpha1  # API версия Argo CD Application CRD
+kind: Application                  # Тип ресурса Kubernetes - Application
+metadata:
+  name: nginx-app                  # Имя приложения (отображается в Argo CD UI)
+  namespace: argocd                # Namespace где хранится Application (всегда argocd)
+spec:
+  project: default                 # Argo CD Project для группировки приложений и RBAC
+  
+  # Git репозиторий - источник манифестов
+  source:
+    repoURL: git@github.com:master1521/nginx-gitops.git  # URL Git репозитория (SSH формат)
+    targetRevision: master           # Ветка/тег/commit для деплоя (main, v1.0.0, abc123)
+    path: nginx-app                # Путь к Helm chart внутри репозитория. Указываешь путь к корню Helm chart. nginx-app/ содержит Chart.yaml → это корень Helm chart
+    helm:                          # Настройки для Helm chart
+      valueFiles:
+      - values.yaml                # Файл с переменными Helm (можно несколько)
+  
+  # Kubernetes кластер - куда деплоить
+  destination:
+    server: https://kubernetes.default.svc  # URL Kubernetes API (default.svc = текущий кластер). Argo UI >>  Settings >> Clusters
+    namespace: dev                 # Namespace для деплоя приложения
+  
+  # Автосинхронизация - политика синхронизации
+  syncPolicy:
+    automated:                     # Включить автоматическую синхронизацию
+      prune: true                  # Удалять ресурсы из кластера если их убрали из Git
+      selfHeal: true               # Восстанавливать из Git при ручных изменениях (kubectl edit)
+      allowEmpty: false            # Запретить синхронизацию если в Git нет ресурсов (защита от пустого деплоя)
+    syncOptions:                   # Дополнительные опции синхронизации
+    - CreateNamespace=true         # Автоматически создать namespace если его нет
+    retry:                         # Настройки повторных попыток при ошибках
+      limit: 5                     # Максимум 5 попыток синхронизации при ошибке
+      backoff:                     # Экспоненциальная задержка между попытками
+        duration: 5s               # Начальная задержка 5 секунд
+        factor: 2                  # Увеличивать задержку в 2 раза (5s → 10s → 20s → 40s → 80s)
+        maxDuration: 3m            # Максимальная задержка 3 минуты
