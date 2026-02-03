@@ -51,7 +51,9 @@ migrateDatabaseJob:
   enabled: true
   useHelmHooks: false
 
-
+createUserJob:
+  useHelmHooks: false  # Отключить hooks для create-user job иначе при перезапуске будет ошибка
+  
 executor: "KubernetesExecutor"
 
 airflowPodAnnotations:
