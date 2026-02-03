@@ -49,6 +49,8 @@ webserver:
 
 migrateDatabaseJob:
   enabled: true
+  useHelmHooks: false
+
 
 executor: "KubernetesExecutor"
 
