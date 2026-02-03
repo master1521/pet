@@ -1,0 +1,16 @@
+# postgres_service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-service # Имя Service, по нему обращаются другие Pod'ы
+  namespace: airflow-test # Имя Service, по нему обращаются другие Pod'ы
+spec:
+  type: NodePort # Делает порт доступным снаружи ноды (через nodeIP:nodePort)
+  selector:
+    run: postgres-server # Лейбл, по которому Service находит нужный Pod
+  ports:
+  - port: 5432 # Порт на котором Service ПРИНИМАЕТ запросы. Порт на котором Service слушает входящие запросы внутри кластера. Для другие pods в кластере которые хотят подключиться к PostgreSQL
+    targetPort: 5432 # Перенаправляет на порт 5432 внутри Pod
+
+# Service postgres-service ищет Pod’ы с лейблом run: postgres-server и создаёт для них стабильный DNS-адрес и IP.
+# Любой Pod в кластере может подключиться к базе по адресу postgres-service:5432.

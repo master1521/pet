@@ -1,0 +1,15 @@
+# postgres-pvc.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc
+  namespace: airflow-test
+  labels:
+    app: postgres
+spec:
+  accessModes:
+    - ReadWriteOnce  # Может быть примонтирован только одним Pod
+  resources:
+    requests:
+      storage: 5Gi  # Размер хранилища (измени если нужно больше)
+  storageClassName: standard  # Для Minikube (автоматически создаст PV)

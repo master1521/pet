@@ -1,0 +1,94 @@
+images:
+  airflow:
+    repository: master1521/airflow
+    tag: "2.9.1.1"
+    pullPolicy: IfNotPresent
+
+
+registry:
+  secretName: docker-hub-creds
+
+
+defaultAirflowRepository: master1521/airflow
+defaultAirflowTag: "2.9.1.1"
+
+
+postgresql:
+  enabled: false
+
+redis:
+  enabled: false
+
+data:
+  metadataConnection:
+    user: airflow
+    pass: airflow
+    protocol: postgresql
+    host: postgres-service
+    port: 5432
+    db: airflow
+    sslmode: disable
+
+
+webserver:
+  enabled: true
+  defaultUser:
+    enabled: true
+    username: airflow
+    password: airflow
+    email: admin@example.com
+    firstName: Admin
+    lastName: User
+  service:
+    type: NodePort
+    ports:
+      - name: airflow-ui
+        port: 8080
+        nodePort: 30080
+
+
+migrateDatabaseJob:
+  enabled: true
+
+executor: "KubernetesExecutor"
+
+airflowPodAnnotations:
+  cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
+
+config:
+  core:
+    load_examples: 'true'
+  kubernetes:
+    worker_container_repository: master1521/airflow
+    worker_container_tag: "2.9.1.1"
+    image_pull_secrets: '[{"name": "docker-hub-creds"}]'
+    namespace: airflow-test
+    delete_worker_pods: 'True'
+    delete_worker_pods_on_failure: 'False'
+    git_sync_dest: "repo"
+    git_dags_folder_mount_point: "/opt/airflow/dags"
+
+logs:
+  persistence:
+    enabled: false
+
+scheduler:
+  logGroomerSidecar:
+    enabled: true
+  replicas: 1
+
+triggerer:
+  enabled: false
+
+
+dags:
+  gitSync:
+    enabled: true
+    repo: git@github.com:master1521/airfow-gitsync.git
+    branch: master
+    rev: HEAD
+    depth: 1
+    maxFailures: 0
+    subPath: "dags"
+    wait: 60
+    sshKeySecret: git-credentials

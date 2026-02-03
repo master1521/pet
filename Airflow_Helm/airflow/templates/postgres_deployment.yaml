@@ -1,0 +1,39 @@
+# postgres_deployment.yaml
+apiVersion: apps/v1 # Версия API Kubernetes для объекта Deployment
+kind: Deployment
+metadata:
+  name: postgres-server # Имя Deployment, по нему можно делать kubectl get/describe
+  namespace: airflow-test # Namespace, в котором живёт Deployment
+  labels:
+    run: postgres-server # Лейбл самого Deployment
+spec:
+  replicas: 1 # Количество реплик Pod (всегда 1 для PostgreSQL)
+  selector: # Как Deployment находит свои Pods
+    matchLabels:
+      run: postgres-server # Должно совпадать с labels в template ниже!
+  template: # Шаблон для создания Pods
+    metadata: # Метаданные для Pods
+      labels: # Labels для Pods (должны совпадать с selector.matchLabels выше)
+        run: postgres-server # Лейбл, по нему Service найдёт этот Pod
+    spec: # ←  Спецификация Pod
+      containers:
+      - name: postgres  # Имя контейнера внутри Pod
+        image: postgres:15 # Docker-образ PostgreSQL версии 15
+        env: # Переменные окружения для PostgreSQL (Так на проде не используют)
+        - name: POSTGRES_USER
+          value: "airflow"
+        - name: POSTGRES_PASSWORD
+          value: "airflow"
+        - name: POSTGRES_DB
+          value: "airflow"
+        - name: PGDATA
+          value: "/var/lib/postgresql/data/pgdata"  # Подпапка для данных
+        ports:
+        - containerPort: 5432 # Порт внутри контейнера, на котором слушает
+        volumeMounts:
+        - name: postgres-storage
+          mountPath: /var/lib/postgresql/data  # Путь, где Postgres хранит данные
+      volumes:
+      - name: postgres-storage
+        persistentVolumeClaim:
+          claimName: postgres-pvc  # Используем PVC
