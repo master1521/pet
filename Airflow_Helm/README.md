@@ -114,3 +114,72 @@ kubectl create namespace airflow-test
 kubectl get all -n airflow-test -o wide
 ~~~
 
+# УСТАНОВКА ARGOCD
+Создать неймспайс   
+~~~
+kubectl create namespace airflow-test
+kubectl create namespace argocd
+~~~
+
+Установка ресурсов argocd  
+~~~
+kubectl apply -n argocd -f argo-install.yaml
+~~~
+
+
+
+Создать Application
+Применить манифест Application
+~~~
+kubectl apply -f argocd-application.yaml
+~~~
+
+
+
+Проверяем после установки   
+~~~
+kubectl get all -n argocd -o wide
+~~~
+
+
+Делаем проброс портов для UI или через LENS
+~~~
+kubectl port-forward svc/argocd-server -n argocd 8080:443
+~~~
+
+Получи пароль UI Argo
+Логин: admin
+Пароль: можно посмотреть в argocd-initial-admin-secret или через команду
+~~~
+kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d && echo
+~~~
+
+
+
+
+
+Проверить запуск сервисов   
+~~~
+kubectl get all -n argocd -o wide
+~~~
+
+
+
+Удалить все в неймспейсе  
+~~~
+kubectl delete all --all -n argocd
+kubectl delete all,configmap,secret,ingress,pvc,serviceaccount,role,rolebinding --all -n argocd
+kubectl get all -n argocd -o wide
+kubectl delete namespace argocd
+kubectl get namespace argocd -o json | \
+  jq '.spec.finalizers = []' | \
+  kubectl replace --raw "/api/v1/namespaces/argocd/finalize" -f -
+
+kubectl patch application airflow -n argocd -p '{"metadata":{"finalizers":[]}}' --type=merge
+kubectl patch application airflow -n argocd -p '{"metadata":{"finalizers":null}}' --type=merge
+kubectl delete application airflow -n argocd --force --grace-period=0
+kubectl get application -n argocd
+
+
+kubectl create namespace argocd
+~~~
