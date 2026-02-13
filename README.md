@@ -1,12 +1,8 @@
-## Kubernetes Airflow Helm с ArgoCd
-**Кастомный Airflow поднятый через Helm c GitSync и CD через ArgoCD**
-https://github.com/master1521/pet/tree/master/Airflow_Helm
-![1.png](Airflow_Helm/img/1.png)
+## Kubernetes Airflow Helm + ArgoCd    
+**Кастомный Airflow поднятый через Helm c GitSync и CD через ArgoCD**    
+https://github.com/master1521/pet/tree/master/Airflow_Helm    
+![1.png](Airflow_Helm/img/1.png)    
 
-## K8S + Minikube + Nginx Helm + ArgoCd
-**Стенд для изучения K8S + Minikube + Helm + ArgoCd**   
-https://github.com/master1521/pet/tree/master/nginx-gitops    
-![ 1.png](nginx-gitops/img/%201.png)
 
 ## Spark Standalone кластер
 **Локальный распределенный Spark класткер в режиме Standalone для тестов и обучения**   
