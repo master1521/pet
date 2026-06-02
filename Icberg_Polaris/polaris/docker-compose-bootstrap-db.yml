@@ -1,0 +1,22 @@
+services:
+  polaris-bootstrap:
+    image: apache/polaris-admin-tool@sha256:7ef7557b528964e792caeaef3908434bd99c7d2f994caa654da1d77c6b428a80  # 1.4.0
+    environment:
+      - POLARIS_PERSISTENCE_TYPE=relational-jdbc
+      - QUARKUS_DATASOURCE_JDBC_URL=${QUARKUS_DATASOURCE_JDBC_URL}
+      - QUARKUS_DATASOURCE_USERNAME=${QUARKUS_DATASOURCE_USERNAME}
+      - QUARKUS_DATASOURCE_PASSWORD=${QUARKUS_DATASOURCE_PASSWORD}
+      - CLIENT_ID=${CLIENT_ID}
+      - CLIENT_SECRET=${CLIENT_SECRET}
+    command:
+      - "bootstrap"
+      - "--realm=POLARIS"
+      - "--credential=POLARIS,${CLIENT_ID},${CLIENT_SECRET}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  polaris:
+    depends_on:
+      polaris-bootstrap:
+        condition: service_completed_successfully

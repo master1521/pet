@@ -1,0 +1,35 @@
+services:
+
+  spark-jupyter:
+    build:
+      context: ../spark
+      dockerfile: DockerfileSparkIcebergJupyter
+    container_name: spark-iceberg-notebook
+    ports:
+      - "8888:8888"
+      - "4040-4045:4040-4045"
+    volumes:
+      - ../spark/notebooks:/home/jovyan/work
+      - ../spark/spark-defaults.conf:/usr/local/spark/conf/spark-defaults.conf:ro
+    environment:
+      JUPYTER_ENABLE_LAB: "yes"
+      GRANT_SUDO: "yes"
+      SPARK_DRIVER_MEMORY: 4g
+      SPARK_EXECUTOR_MEMORY: 4g
+      AWS_REGION: ${AWS_REGION}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_ENDPOINT_URL: ${AWS_ENDPOINT_URL}
+      IVAN_CLIENT_ID: ${IVAN_CLIENT_ID}
+      IVAN_CLIENT_SECRET: ${IVAN_CLIENT_SECRET}
+      MARIA_CLIENT_ID: ${MARIA_CLIENT_ID}
+      MARIA_CLIENT_SECRET: ${MARIA_CLIENT_SECRET}
+      ALEX_CLIENT_ID: ${ALEX_CLIENT_ID}
+      ALEX_CLIENT_SECRET: ${ALEX_CLIENT_SECRET}
+      ETL_SERVICE_CLIENT_ID: ${ETL_SERVICE_CLIENT_ID}
+      ETL_SERVICE_CLIENT_SECRET: ${ETL_SERVICE_CLIENT_SECRET}
+      BI_USER_CLIENT_ID: ${BI_USER_CLIENT_ID}
+      BI_USER_CLIENT_SECRET: ${BI_USER_CLIENT_SECRET}
+      REPORT_USER_CLIENT_ID: ${REPORT_USER_CLIENT_ID}
+      REPORT_USER_CLIENT_SECRET: ${REPORT_USER_CLIENT_SECRET}
+    command: start-notebook.sh --NotebookApp.token='' --NotebookApp.password=''

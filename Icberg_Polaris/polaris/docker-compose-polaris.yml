@@ -1,0 +1,34 @@
+services:
+  polaris:
+    image: apache/polaris@sha256:ef4947a3fd005ca5b2aec2bde98682a59996d38f21c16c4660fbb79e4c20b40c  # 1.4.0
+    ports:
+      # API port
+      - "8181:8181"
+      # Management port (metrics and health checks)
+      - "8182:8182"
+      # Optional, allows attaching a debugger to the Polaris JVM
+      - "5005:5005"
+    environment:
+      POLARIS_PERSISTENCE_TYPE: relational-jdbc
+      POLARIS_PERSISTENCE_RELATIONAL_JDBC_MAX_RETRIES: 5
+      POLARIS_PERSISTENCE_RELATIONAL_JDBC_INITIAL_DELAY_IN_MS: 100
+      POLARIS_PERSISTENCE_RELATIONAL_JDBC_MAX_DURATION_IN_MS: 5000
+      QUARKUS_DATASOURCE_JDBC_URL: $QUARKUS_DATASOURCE_JDBC_URL
+      QUARKUS_DATASOURCE_USERNAME: $QUARKUS_DATASOURCE_USERNAME
+      QUARKUS_DATASOURCE_PASSWORD: $QUARKUS_DATASOURCE_PASSWORD
+      AWS_ACCESS_KEY_ID:  $AWS_ACCESS_KEY_ID
+      AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
+      AWS_REGION: ru-central1
+      AWS_ENDPOINT_URL: https://storage.yandexcloud.net
+      POLARIS_REALM_CONTEXT_REALMS: POLARIS
+      QUARKUS_OTEL_SDK_DISABLED: true
+      POLARIS_BOOTSTRAP_CREDENTIALS: POLARIS,$CLIENT_ID,$CLIENT_SECRET
+      polaris.features."ALLOW_INSECURE_STORAGE_TYPES": "true"
+      polaris.features."SUPPORTED_CATALOG_STORAGE_TYPES": "[\"FILE\",\"S3\",\"GCS\",\"AZURE\"]"
+      polaris.readiness.ignore-severe-issues: "true"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8182/q/health"]
+      interval: 5s
+      timeout: 10s
+      retries: 10
+      start_period: 150s

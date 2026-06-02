@@ -1,8 +1,12 @@
+## Apache Iceberg + Apache Polaris Catalog + Data LakeHouse    
+**Data LakeHouse стенд Iceberg + Polaris**    
+https://github.com/master1521/pet/tree/master/Icberg_Polaris    
+![fon1.png](Icberg_Polaris/img/fon1.png)
+
 ## Kubernetes Airflow Helm + ArgoCd    
 **Кастомный Airflow поднятый через Helm c GitSync и CD через ArgoCD**    
 https://github.com/master1521/pet/tree/master/Airflow_Helm    
 ![1.png](Airflow_Helm/img/1.png)    
-
 
 ## Spark Standalone кластер
 **Локальный распределенный Spark класткер в режиме Standalone для тестов и обучения**   

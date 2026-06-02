@@ -1,0 +1,39 @@
+FROM jupyter/pyspark-notebook:spark-3.5.0
+
+USER root
+
+RUN apt-get update && apt-get install -y \
+    vim git tree wget htop net-tools \
+    iputils-ping traceroute curl \
+    && rm -rf /var/lib/apt/lists/*
+
+USER jovyan
+
+RUN pip install --no-cache-dir \
+    pyiceberg==0.9.1 \
+    great-expectations==0.18.0
+
+USER root
+
+# Iceberg JAR — версия синхронизирована со spark-sql сервисом (1.10.1)
+RUN wget -q https://repo1.maven.org/maven2/org/apache/iceberg/iceberg-spark-runtime-3.5_2.12/1.10.1/iceberg-spark-runtime-3.5_2.12-1.10.1.jar \
+    -O $SPARK_HOME/jars/iceberg-spark-runtime-3.5_2.12-1.10.1.jar
+
+RUN wget -q https://repo1.maven.org/maven2/org/apache/iceberg/iceberg-aws-bundle/1.10.1/iceberg-aws-bundle-1.10.1.jar \
+    -O $SPARK_HOME/jars/iceberg-aws-bundle-1.10.1.jar
+
+
+# PostgreSQL JDBC
+RUN wget -q https://repo1.maven.org/maven2/org/postgresql/postgresql/42.7.2/postgresql-42.7.2.jar \
+    -O $SPARK_HOME/jars/postgresql-42.7.2.jar
+
+ENV SPARK_HOME=/usr/local/spark
+ENV PATH=$SPARK_HOME/bin:$PATH
+ENV PYTHONPATH=$SPARK_HOME/python:$SPARK_HOME/python/lib/py4j-0.10.9.7-src.zip
+ENV SPARK_DRIVER_MEMORY=4g
+ENV SPARK_EXECUTOR_MEMORY=4g
+
+
+USER jovyan
+
+WORKDIR /home/jovyan/work

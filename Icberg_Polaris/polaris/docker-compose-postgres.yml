@@ -1,0 +1,29 @@
+services:
+  postgres:
+    image: postgres:18.3
+    ports:
+      - "5432:5432"
+    shm_size: 128mb
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: POLARIS
+      POSTGRES_INITDB_ARGS: "--encoding UTF8 --data-checksums"
+    volumes:
+      - type: bind
+#        source: ${ASSETS_PATH}/postgres/postgresql.conf
+        source: ./postgresql.conf
+        target: /etc/postgresql/postgresql.conf
+      - postgres_data:/var/lib/postgresql
+    command:
+      - "postgres"
+      - "-c"
+      - "config_file=/etc/postgresql/postgresql.conf"
+    healthcheck:
+      test: "pg_isready -U postgres"
+      interval: 5s
+      timeout: 2s
+      retries: 15
+
+volumes:
+  postgres_data:
